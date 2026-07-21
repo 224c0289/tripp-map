@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tripp Map</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: #0f0f0f;
+    color: #e0e0e0;
+  }
+
+  #map {
+    width: 100%;
+    height: 100vh;
+    z-index: 1;
+  }
+
+  .header-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: rgba(15, 15, 15, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .header-bar h1 {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    background: linear-gradient(135deg, #60a5fa, #a78bfa, #f472b6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .header-bar .count {
+    font-size: 12px;
+    color: #888;
+    margin-left: auto;
+  }
+
+  .stat-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(255,255,255,0.06);
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    color: #aaa;
+  }
+
+  .leaflet-popup-content-wrapper {
+    background: #1a1a2e;
+    color: #e0e0e0;
+    border-radius: 14px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    border: 1px solid rgba(255,255,255,0.08);
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .leaflet-popup-content {
+    margin: 0;
+    width: 300px;
+    max-width: calc(100vw - 60px);
+  }
+
+  .leaflet-popup-tip {
+    background: #1a1a2e;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-top: none;
+    border-left: none;
+  }
+
+  .popup-photo {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    display: block;
+  }
+
+  .popup-body {
+    padding: 14px 16px;
+  }
+
+  .popup-name {
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    color: #fff;
+  }
+
+  .popup-address {
+    font-size: 12px;
+    color: #888;
+    margin-bottom: 8px;
+    line-height: 1.4;
+  }
+
+  .popup-comment {
+    font-size: 13px;
+    color: #bbb;
+    line-height: 1.5;
+    margin-bottom: 10px;
+    padding: 8px 10px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 8px;
+    border-left: 3px solid #60a5fa;
+  }
+
+  .popup-meta {
+    display: flex;
+    gap: 12px;
+    font-size: 11px;
+    color: #777;
+  }
+
+  .popup-meta span {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .popup-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .popup-actions button {
+    flex: 1;
+    padding: 7px 0;
+    border: none;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+  }
+  .popup-actions button:active {
+    transform: scale(0.96);
+  }
+
+  .btn-edit {
+    background: rgba(96,165,250,0.15);
+    color: #60a5fa;
+  }
+  .btn-edit:hover { background: rgba(96,165,250,0.25); }
+
+  .btn-delete {
+    background: rgba(239,68,68,0.15);
+    color: #ef4444;
+  }
+  .btn-delete:hover { background: rgba(239,68,68,0.25); }
+
+  .leaflet-control-zoom {
+    border: none !important;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3) !important;
+  }
+
+  .leaflet-control-zoom a {
+    background: #1a1a2e !important;
+    color: #ccc !important;
+    border: 1px solid rgba(255,255,255,0.08) !important;
+    width: 34px !important;
+    height: 34px !important;
+    line-height: 34px !important;
+    font-size: 16px !important;
+  }
+
+  .leaflet-control-zoom a:hover {
+    background: #252540 !important;
+    color: #fff !important;
+  }
+
+  .leaflet-control-attribution {
+    background: rgba(15,15,15,0.7) !important;
+    color: #555 !important;
+    font-size: 10px !important;
+  }
+
+  .leaflet-control-attribution a {
+    color: #777 !important;
+  }
+
+  /* ============================
+     登録フォームボタン
+     ============================ */
+  .fab {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    z-index: 1000;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: none;
+    background: linear-gradient(135deg, #60a5fa, #a78bfa);
+    color: #fff;
+    font-size: 28px;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(96,165,250,0.4);
+    transition: transform 0.2s, box-shadow 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .fab:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 28px rgba(96,165,250,0.6);
+  }
+
+  /* ============================
+     モーダルオーバーレイ
+     ============================ */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .modal-overlay.active {
+    display: flex;
+  }
+
+  .modal {
+    background: #1a1a2e;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 440px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.5);
+  }
+
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 20px 0;
+  }
+
+  .modal-header h2 {
+    font-size: 17px;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  .modal-close {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255,255,255,0.08);
+    color: #aaa;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+  }
+  .modal-close:hover {
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+  }
+
+  .modal-body {
+    padding: 16px 20px 20px;
+  }
+
+  .form-row {
+    display: flex;
+    gap: 10px;
+  }
+  .form-row .form-group { flex: 1; }
+
+  .form-group {
+    margin-bottom: 12px;
+  }
+
+  .form-group label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: #999;
+    margin-bottom: 5px;
+    letter-spacing: 0.3px;
+  }
+
+  .form-group input,
+  .form-group textarea {
+    width: 100%;
+    padding: 10px 12px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    color: #e0e0e0;
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .form-group input:focus,
+  .form-group textarea:focus {
+    border-color: #60a5fa;
+  }
+  .form-group input::placeholder,
+  .form-group textarea::placeholder {
+    color: #555;
+  }
+
+  .form-group textarea {
+    resize: vertical;
+    min-height: 60px;
+  }
+
+  .form-hint {
+    font-size: 11px;
+    color: #555;
+    margin-top: 4px;
+  }
+
+  .btn-register {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #60a5fa, #a78bfa);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 6px;
+    transition: opacity 0.2s, transform 0.1s;
+  }
+  .btn-register:hover {
+    opacity: 0.9;
+  }
+  .btn-register:active {
+    transform: scale(0.98);
+  }
+
+  .map-click-hint {
+    position: fixed;
+    bottom: 96px;
+    right: 28px;
+    z-index: 1000;
+    background: rgba(26,26,46,0.9);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.1);
+    padding: 8px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    color: #aaa;
+    display: none;
+    pointer-events: none;
+    animation: fadeHint 3s forwards;
+  }
+  @keyframes fadeHint {
+    0%, 70% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+
+  .toast {
+    position: fixed;
+    top: 70px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    z-index: 3000;
+    background: #22c55e;
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    opacity: 0;
+    transition: opacity 0.3s, transform 0.3s;
+    pointer-events: none;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  @media (max-width: 600px) {
+    .header-bar {
+      padding: 10px 14px;
+    }
+    .header-bar h1 {
+      font-size: 16px;
+    }
+    .leaflet-popup-content {
+      width: 260px;
+    }
+    .popup-photo {
+      height: 150px;
+    }
+    .popup-body {
+      padding: 12px 14px;
+    }
+    .popup-name {
+      font-size: 15px;
+    }
+    .fab {
+      bottom: 20px;
+      right: 20px;
+      width: 50px;
+      height: 50px;
+      font-size: 24px;
+    }
+    .map-click-hint {
+      bottom: 82px;
+      right: 20px;
+    }
+    .form-row {
+      flex-direction: column;
+      gap: 0;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="header-bar">
+  <h1>Tripp Map</h1>
+  <span class="stat-badge" id="spotCount">📍 0 spots</span>
+  <span class="count" id="countryCount"></span>
+</div>
+
+<div id="map"></div>
+
+<button class="fab" id="fabBtn" title="場所を登録">+</button>
+
+<div class="map-click-hint" id="mapHint">地図をクリックしてピンの位置を選択</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modalTitle">旅行先を登録</h2>
+      <button class="modal-close" id="modalClose">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>場所名 *</label>
+        <input type="text" id="fName" placeholder="例: 東京タワー" required>
+      </div>
+      <div class="form-group">
+        <label>住所</label>
+        <input type="text" id="fAddress" placeholder="例: 東京都港区芝公園">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>緯度 *</label>
+          <input type="number" id="fLat" step="any" placeholder="35.6586" required>
+        </div>
+        <div class="form-group">
+          <label>経度 *</label>
+          <input type="number" id="fLng" step="any" placeholder="139.7454" required>
+        </div>
+      </div>
+      <div class="form-hint">地図をクリックで自動入力されます</div>
+      <div class="form-group">
+        <label>一言コメント</label>
+        <textarea id="fComment" placeholder="印象に残ったことを書きましょう"></textarea>
+      </div>
+      <div class="form-group">
+        <label>写真URL</label>
+        <input type="url" id="fPhoto" placeholder="https://example.com/photo.jpg">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>訪れた日</label>
+          <input type="date" id="fDate">
+        </div>
+        <div class="form-group">
+          <label>時間</label>
+          <input type="time" id="fTime">
+        </div>
+      </div>
+      <button class="btn-register" id="registerBtn">ピンを登録する</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">ピンを登録しました！</div>
+
+<script>
+// ============================
+// サンプルデータ（初回のみ localStorage に保存）
+// ============================
+const defaultTrips = [
+  { name:"東京タワー", lat:35.6586, lng:139.7454, address:"東京都港区芝公園4丁目2-8", comment:"夜景が最高でした！展望デッキから見た東京の景色は一生忘れません。", photo:"https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=600&h=400&fit=crop", time:"18:00", date:"2024-03-15", country:"JP" },
+  { name:"伏見稲荷大社", lat:34.9671, lng:135.7727, address:"京都府京都市伏見区深草薮之内町68", comment:"千本鳥居の色鮮やかさに圧倒されました。山頂まで登りました。", photo:"https://images.unsplash.com/photo-1478436127897-769e1b3f0f36?w=600&h=400&fit=crop", time:"09:30", date:"2024-05-20", country:"JP" },
+  { name:"富士山", lat:35.3606, lng:138.7274, address:"静岡県/山梨県", comment:"標高3,776m。頂上で見た雲海は神の領域でした。", photo:"https://images.unsplash.com/photo-1490806843957-31f4c9a91c65?w=600&h=400&fit=crop", time:"06:00", date:"2024-08-10", country:"JP" },
+  { name:"渋谷スクランブル交差点", lat:35.6595, lng:139.7004, address:"東京都渋谷区道玄坂", comment:"人の波が壮大。東京のエネルギーを感じるスポット。", photo:"https://images.unsplash.com/photo-1542051841857-5f90071e7989?w=600&h=400&fit=crop", time:"19:00", date:"2024-01-05", country:"JP" },
+  { name:"金閣寺", lat:35.0394, lng:135.7292, address:"京都府京都市北区金閣寺町1", comment:"金色の建物が池に映る姿は息を呑む美しさでした。", photo:"https://images.unsplash.com/photo-1503640538573-148065ba6743?w=600&h=400&fit=crop", time:"10:00", date:"2024-05-21", country:"JP" },
+  { name:"エッフェル塔", lat:48.8584, lng:2.2945, address:"Champ de Mars, 5 Avenue Anatole France, 75007 Paris, France", comment:"パリの象徴。夜のライトアップがロマンチックすぎた。", photo:"https://images.unsplash.com/photo-1511739001486-6bfe10ce65f4?w=600&h=400&fit=crop", time:"20:30", date:"2023-10-12", country:"FR" },
+  { name:"タージマハル", lat:27.1751, lng:78.0421, address:"Dharmapuri, Forest Colony, Tajganj, Agra, Uttar Pradesh 282001, India", comment:"朝日に輝く白亜のドームは幻想的。世界の七不思議の一つを実感。", photo:"https://images.unsplash.com/photo-1564507592333-c60657eea523?w=600&h=400&fit=crop", time:"07:00", date:"2023-12-25", country:"IN" },
+  { name:"マチュピチュ", lat:-13.1631, lng:-72.5450, address:"District of Machupicchu, Peru", comment:"雲の中から浮かび上がる遺跡。トレッキングの疲れが嘘のようでした。", photo:"https://images.unsplash.com/photo-1526392060635-9d6019884377?w=600&h=400&fit=crop", time:"08:00", date:"2024-02-18", country:"PE" },
+  { name:"グランドキャニオン", lat:36.1069, lng:-112.1129, address:"Arizona, United States", comment:"大自然の偉大さを噛み締めた。景色が次から次へと変わる圧巻。", photo:"https://images.unsplash.com/photo-1474044159687-1ee9f3a51722?w=600&h=400&fit=crop", time:"16:00", date:"2023-06-30", country:"US" },
+  { name:"白鳥大橋", lat:43.0621, lng:141.3544, address:"北海道室蘭市", comment:"夕日に照らされた大橋のシルエットが美しい。", photo:"https://images.unsplash.com/photo-1570459027562-4a916cc6113f?w=600&h=400&fit=crop", time:"17:30", date:"2024-09-01", country:"JP" },
+  { name:"厳島神社", lat:34.2960, lng:132.3197, address:"広島県廿日市市宮島町1-1", comment:"海上に浮かぶ鳥居は神秘的。満潮時に訪れて正解でした。", photo:"https://images.unsplash.com/photo-1576675466969-38eeae4b3a4b?w=600&h=400&fit=crop", time:"11:00", date:"2024-07-14", country:"JP" },
+  { name:"コロッセオ", lat:41.8902, lng:12.4922, address:"Piazza del Colosseo, 1, 00184 Roma RM, Italy", comment:"古代ローマの息吹を感じる。歴史の重みに圧倒された。", photo:"https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=600&h=400&fit=crop", time:"14:00", date:"2023-09-05", country:"IT" }
+];
+
+const LS_KEY = "tripp_map_trips";
+
+function loadTrips() {
+  var saved = localStorage.getItem(LS_KEY);
+  if (saved) {
+    try { return JSON.parse(saved); } catch(e) {}
+  }
+  localStorage.setItem(LS_KEY, JSON.stringify(defaultTrips));
+  return defaultTrips;
+}
+
+function saveTrips(t) {
+  localStorage.setItem(LS_KEY, JSON.stringify(t));
+}
+
+var trips = loadTrips();
+
+// ============================
+// マップ初期化
+// ============================
+var map = L.map("map", {
+  center: [36.5, 138.0],
+  zoom: 5,
+  zoomControl: true,
+  attributionControl: true
+});
+
+L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
+  subdomains: "abcd",
+  maxZoom: 19
+}).addTo(map);
+
+// ============================
+// カスタムピンアイコン
+// ============================
+var pinIcon = L.divIcon({
+  className: "custom-pin",
+  html: '<svg width="28" height="40" viewBox="0 0 28 40" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#60a5fa"/><stop offset="100%" stop-color="#a78bfa"/></linearGradient></defs><path d="M14 0C6.27 0 0 6.27 0 14c0 10.5 14 26 14 26s14-15.5 14-26C28 6.27 21.73 0 14 0z" fill="url(#g)" stroke="#fff" stroke-width="1.5"/><circle cx="14" cy="13" r="6" fill="#fff" opacity="0.9"/></svg>',
+  iconSize: [28, 40],
+  iconAnchor: [14, 40],
+  popupAnchor: [0, -38]
+});
+
+// ============================
+// マーカー管理
+// ============================
+var markerMap = {};
+
+function buildPopupHtml(trip, idx) {
+  var html = "";
+  if (trip.photo) {
+    html += '<img class="popup-photo" src="' + trip.photo + '" alt="' + trip.name + '" onerror="this.style.display=\'none\'">';
+  }
+  html += '<div class="popup-body">';
+  html += '<div class="popup-name">' + trip.name + '</div>';
+  html += '<div class="popup-address">' + (trip.address || "") + '</div>';
+  html += '<div class="popup-comment">' + (trip.comment || "") + '</div>';
+  html += '<div class="popup-meta">';
+  html += '<span>📅 ' + (trip.date || "-") + '</span>';
+  html += '<span>🕐 ' + (trip.time || "-") + '</span>';
+  html += '</div>';
+  html += '<div class="popup-actions">';
+  html += '<button class="btn-edit" onclick="startEdit(' + idx + ')">✏️ 編集</button>';
+  html += '<button class="btn-delete" onclick="deleteTrip(' + idx + ')">🗑 削除</button>';
+  html += '</div>';
+  html += '</div>';
+  return html;
+}
+
+function createMarker(trip, idx) {
+  var marker = L.marker([trip.lat, trip.lng], { icon: pinIcon }).addTo(map);
+  marker.bindPopup(buildPopupHtml(trip, idx), { maxWidth: 320, minWidth: 260, closeButton: true });
+  markerMap[idx] = marker;
+}
+
+function rebuildAllMarkers() {
+  Object.keys(markerMap).forEach(function(k) {
+    map.removeLayer(markerMap[k]);
+  });
+  markerMap = {};
+  trips.forEach(function(trip, i) {
+    createMarker(trip, i);
+  });
+}
+
+trips.forEach(function(trip, i) {
+  createMarker(trip, i);
+});
+
+// ============================
+// 統計表示
+// ============================
+function updateStats() {
+  document.getElementById("spotCount").textContent = "📍 " + trips.length + " spots";
+  var countries = [];
+  var seen = {};
+  trips.forEach(function(t) {
+    var c = t.country || "??";
+    if (!seen[c]) { seen[c] = true; countries.push(c); }
+  });
+  var countryNames = { JP:"Japan", FR:"France", IN:"India", PE:"Peru", US:"USA", IT:"Italy" };
+  document.getElementById("countryCount").textContent = countries.map(function(c) { return countryNames[c] || c; }).join(", ");
+}
+updateStats();
+
+// ============================
+// フォーム制御
+// ============================
+var fabBtn = document.getElementById("fabBtn");
+var modalOverlay = document.getElementById("modalOverlay");
+var modalClose = document.getElementById("modalClose");
+var registerBtn = document.getElementById("registerBtn");
+var mapHint = document.getElementById("mapHint");
+var toast = document.getElementById("toast");
+var modalTitle = document.getElementById("modalTitle");
+
+var fLat = document.getElementById("fLat");
+var fLng = document.getElementById("fLng");
+
+var editIndex = -1;
+
+function openModal(title) {
+  modalTitle.textContent = title;
+  modalOverlay.classList.add("active");
+}
+
+function closeModal() {
+  modalOverlay.classList.remove("active");
+  editIndex = -1;
+}
+
+function clearForm() {
+  document.getElementById("fName").value = "";
+  document.getElementById("fAddress").value = "";
+  fLat.value = "";
+  fLng.value = "";
+  document.getElementById("fComment").value = "";
+  document.getElementById("fPhoto").value = "";
+  document.getElementById("fDate").value = "";
+  document.getElementById("fTime").value = "";
+}
+
+function showToast(msg) {
+  toast.textContent = msg;
+  toast.style.display = "block";
+  toast.classList.add("show");
+  setTimeout(function() {
+    toast.classList.remove("show");
+    setTimeout(function() { toast.style.display = "none"; }, 300);
+  }, 2000);
+}
+
+fabBtn.addEventListener("click", function() {
+  editIndex = -1;
+  clearForm();
+  openModal("旅行先を登録");
+  mapHint.style.display = "block";
+  mapHint.style.animation = "none";
+  mapHint.offsetHeight;
+  mapHint.style.animation = "fadeHint 3s forwards";
+});
+
+modalClose.addEventListener("click", closeModal);
+
+modalOverlay.addEventListener("click", function(e) {
+  if (e.target === modalOverlay) { closeModal(); }
+});
+
+// ============================
+// 地図クリックで緯度・経度を自動入力
+// ============================
+map.on("click", function(e) {
+  fLat.value = e.latlng.lat.toFixed(4);
+  fLng.value = e.latlng.lng.toFixed(4);
+  mapHint.style.display = "none";
+});
+
+// ============================
+// 登録 / 更新ボタン
+// ============================
+registerBtn.addEventListener("click", function() {
+  var name = document.getElementById("fName").value.trim();
+  var address = document.getElementById("fAddress").value.trim();
+  var lat = parseFloat(fLat.value);
+  var lng = parseFloat(fLng.value);
+  var comment = document.getElementById("fComment").value.trim();
+  var photo = document.getElementById("fPhoto").value.trim();
+  var date = document.getElementById("fDate").value;
+  var time = document.getElementById("fTime").value;
+
+  if (!name) { alert("場所名を入力してください"); return; }
+  if (isNaN(lat) || isNaN(lng)) { alert("地図をクリックして位置を選択してください"); return; }
+
+  var tripData = {
+    name: name, lat: lat, lng: lng, address: address,
+    comment: comment, photo: photo, date: date, time: time,
+    country: "??", _userAdded: true
+  };
+
+  if (editIndex >= 0) {
+    tripData.country = trips[editIndex].country || "??";
+    tripData._userAdded = trips[editIndex]._userAdded;
+    trips[editIndex] = tripData;
+    saveTrips(trips);
+    rebuildAllMarkers();
+    updateStats();
+    closeModal();
+    showToast("ピンを更新しました！");
+  } else {
+    trips.push(tripData);
+    saveTrips(trips);
+    createMarker(tripData, trips.length - 1);
+    updateStats();
+    closeModal();
+    showToast("ピンを登録しました！");
+  }
+
+  clearForm();
+  map.setView([lat, lng], 10);
+});
+
+// ============================
+// 編集
+// ============================
+function startEdit(idx) {
+  editIndex = idx;
+  var t = trips[idx];
+  document.getElementById("fName").value = t.name;
+  document.getElementById("fAddress").value = t.address || "";
+  fLat.value = t.lat;
+  fLng.value = t.lng;
+  document.getElementById("fComment").value = t.comment || "";
+  document.getElementById("fPhoto").value = t.photo || "";
+  document.getElementById("fDate").value = t.date || "";
+  document.getElementById("fTime").value = t.time || "";
+  openModal("旅行先を編集");
+  map.closePopup();
+}
+
+// ============================
+// 削除
+// ============================
+function deleteTrip(idx) {
+  var t = trips[idx];
+  if (!confirm("「" + t.name + "」を削除しますか？")) { return; }
+  trips.splice(idx, 1);
+  saveTrips(trips);
+  rebuildAllMarkers();
+  updateStats();
+  map.closePopup();
+  showToast("ピンを削除しました");
+}
+</script>
+
+</body>
+</html>
