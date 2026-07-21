@@ -745,7 +745,8 @@ registerBtn.addEventListener("click", async function() {
 
   var tripData = {
     name: name, lat: lat, lng: lng, address: address,
-    comment: comment, photo: photo, date: date, time: time
+    comment: comment, photo: photo, date: date, time: time,
+    user_id: currentUser.id
   };
 
   if (editId) {
