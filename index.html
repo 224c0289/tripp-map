@@ -92,6 +92,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
 @keyframes step{0%{transform:translateY(0)}50%{transform:translateY(-2px)}100%{transform:translateY(0)}}
 .trail{position:fixed;z-index:999;pointer-events:none;border-radius:50%;animation:trailFade .8s forwards}
 @keyframes trailFade{0%{opacity:.6;transform:scale(1)}100%{opacity:0;transform:scale(.3)}}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.4);opacity:.7}}
+@keyframes bounce{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-10px) scale(1.2)}}
 @keyframes fh{0%,70%{opacity:1}100%{opacity:0}}
 @media(max-width:600px){.hdr{padding:10px 14px}.hdr h1{font-size:16px}.leaflet-popup-content{width:260px}.pp-img{height:150px}.pp-body{padding:12px 14px}.pp-name{font-size:15px}.fab{bottom:20px;right:20px;width:50px;height:50px;font-size:24px}.sbtn{bottom:20px;right:84px;width:50px;height:50px;font-size:20px}.hint{bottom:82px;right:20px}.fr{flex-direction:column;gap:0}.side{width:300px}}
 </style>
@@ -308,44 +310,93 @@ async function delTrip(id){
 
 loadTrips();
 
-var animMarker=null;
+var animMarkers=[];
+function clearAnim(){animMarkers.forEach(function(m){map.removeLayer(m);});animMarkers=[];}
+
 function animateTransport(t){
-  if(animMarker){map.removeLayer(animMarker);animMarker=null;}
+  clearAnim();
   var ti=TI[t.transport]||TI.train;
   var icoClass=t.transport==="plane"?"plane-ico":t.transport==="train"||t.transport==="shinkansen"?"train-ico":t.transport==="walk"?"walk-ico":"";
-  var icon=L.divIcon({className:"anim-mk",html:'<div class="anim-ico '+icoClass+'" style="font-size:36px">'+ti.icon+'</div>',iconSize:[36,36],iconAnchor:[18,18]});
+  var transportIcon=L.divIcon({className:"anim-mk",html:'<div class="anim-ico '+icoClass+'" style="font-size:36px">'+ti.icon+'</div>',iconSize:[36,36],iconAnchor:[18,18]});
+  var personIcon=L.divIcon({className:"anim-mk",html:'<div class="anim-ico walk-ico" style="font-size:30px">🚶</div>',iconSize:[30,30],iconAnchor:[15,15]});
 
   var isIntl=isOver(t.lat,t.lng);
-  var pts=[];
-  var steps=60;
+  var dir=Math.atan2(t.lat-HOME.lat,t.lng-HOME.lng);
+  var walkDist=0.03;
+  var stationLat=HOME.lat+Math.sin(dir)*walkDist;
+  var stationLng=HOME.lng+Math.cos(dir)*walkDist;
 
+  var walkPts=[];
+  var walkSteps=15;
+  for(var i=0;i<=walkSteps;i++){
+    var f=i/walkSteps;
+    walkPts.push([HOME.lat+(stationLat-HOME.lat)*f,HOME.lng+(stationLng-HOME.lng)*f]);
+  }
+
+  var mainPts=[];
+  var mainSteps=60;
   if(isIntl){
     var viaLng=t.lng;
-    for(var i=0;i<=steps;i++){
-      var f=i/steps;
-      var lat=HOME.lat+(t.lat-HOME.lat)*f;
-      var lng=HOME.lng+(viaLng-HOME.lng)*f;
-      if(f<0.5){lat=HOME.lat+(0-HOME.lat)*Math.pow(f*2,1.5);lng=HOME.lng+(viaLng-HOME.lng)*f*2;}
-      else{var ff=(f-0.5)*2;lat=t.lat*Math.pow(ff,0.5);lng=viaLng+(t.lng-viaLng)*ff;}
-      pts.push([lat,lng]);
+    for(var j=0;j<=mainSteps;j++){
+      var f2=j/mainSteps;
+      var lat,lng;
+      if(f2<0.5){
+        lat=stationLat+(0-stationLat)*Math.pow(f2*2,1.5);
+        lng=stationLng+(viaLng-stationLng)*f2*2;
+      }else{
+        var ff=(f2-0.5)*2;
+        lat=t.lat*Math.pow(ff,0.5);
+        lng=viaLng+(t.lng-viaLng)*ff;
+      }
+      mainPts.push([lat,lng]);
     }
   }else{
-    for(var i2=0;i2<=steps;i2++){
-      var f2=i2/steps;
-      pts.push([HOME.lat+(t.lat-HOME.lat)*f2,HOME.lng+(t.lng-HOME.lng)*f2]);
+    for(var k=0;k<=mainSteps;k++){
+      var f3=k/mainSteps;
+      mainPts.push([stationLat+(t.lat-stationLat)*f3,stationLng+(t.lng-stationLng)*f3]);
     }
   }
 
-  animMarker=L.marker(pts[0],{icon:icon,zIndexOffset:9000}).addTo(map);
+  var person=L.marker(walkPts[0],{icon:personIcon,zIndexOffset:9500}).addTo(map);
+  animMarkers.push(person);
 
+  var wi=0;
+  var walkIv=setInterval(function(){
+    if(wi>=walkPts.length){
+      clearInterval(walkIv);
+      map.removeLayer(person);
+      animMarkers=animMarkers.filter(function(m){return m!==person;});
+
+      var boardIcon=L.divIcon({className:"anim-mk",html:'<div style="font-size:22px;animation:pulse .4s ease-in-out 3">🫳</div>',iconSize:[22,22],iconAnchor:[11,11]});
+      var board=L.marker(stationLatlng={lat:stationLat,lng:stationLng},{icon:boardIcon,zIndexOffset:9600}).addTo(map);
+      animMarkers.push(board);
+      setTimeout(function(){
+        map.removeLayer(board);
+        animMarkers=animMarkers.filter(function(m){return m!==board;});
+        startMainAnim(mainPts,transportIcon,t);
+      },1200);
+      return;
+    }
+    person.setLatLng(walkPts[wi]);
+    wi++;
+  },80);
+}
+
+function startMainAnim(pts,icon,t){
+  var mkr=L.marker(pts[0],{icon:icon,zIndexOffset:9000}).addTo(map);
+  animMarkers.push(mkr);
   var idx=0;
   var iv=setInterval(function(){
     if(idx>=pts.length){
       clearInterval(iv);
-      setTimeout(function(){if(animMarker){map.removeLayer(animMarker);animMarker=null;}},1200);
+      var ti=TI[t.transport]||TI.train;
+      var arriveIcon=L.divIcon({className:"anim-mk",html:'<div style="font-size:28px;animation:bounce .5s ease-in-out 3">🎉</div>',iconSize:[28,28],iconAnchor:[14,14]});
+      var arr=L.marker(pts[pts.length-1],{icon:arriveIcon,zIndexOffset:9700}).addTo(map);
+      animMarkers.push(arr);
+      setTimeout(function(){clearAnim();},2000);
       return;
     }
-    animMarker.setLatLng(pts[idx]);
+    mkr.setLatLng(pts[idx]);
     idx++;
   },30);
 }
