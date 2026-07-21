@@ -374,10 +374,8 @@ async function fetchTrips() {
   var res = await sb.from(TABLE_NAME).select("*").order("created_at", { ascending: false });
   if (res.error) {
     console.error("取得エラー:", res.error);
-    showToast("データの取得に失敗しました");
-    return;
   }
-  trips = res.data && res.data.length > 0 ? res.data : sampleTrips;
+  trips = (!res.error && res.data && res.data.length > 0) ? res.data : sampleTrips;
   rebuildAllMarkers();
   updateStats();
 }
