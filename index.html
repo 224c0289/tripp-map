@@ -82,6 +82,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica N
 .ld.off{display:none}
 .ld-s{width:20px;height:20px;border:2px solid rgba(255,255,255,0.1);border-top-color:#60a5fa;border-radius:50%;animation:sp .8s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
+.anim-mk{pointer-events:none;transition:none}
+.anim-ico{font-size:32px;filter:drop-shadow(0 0 8px rgba(96,165,250,0.8));animation:bob .6s ease-in-out infinite alternate}
+@keyframes bob{0%{transform:translateY(0)}100%{transform:translateY(-4px)}}
+.anim-ico.plane-ico{animation:bob .8s ease-in-out infinite alternate,tilt .4s ease-in-out infinite alternate}
+@keyframes tilt{0%{transform:translateY(0) rotate(-5deg)}100%{transform:translateY(-6px) rotate(5deg)}}
+.anim-ico.train-ico{animation:bob .3s linear infinite alternate}
+.anim-ico.walk-ico{font-size:28px;animation:step .4s steps(2) infinite}
+@keyframes step{0%{transform:translateY(0)}50%{transform:translateY(-2px)}100%{transform:translateY(0)}}
+.trail{position:fixed;z-index:999;pointer-events:none;border-radius:50%;animation:trailFade .8s forwards}
+@keyframes trailFade{0%{opacity:.6;transform:scale(1)}100%{opacity:0;transform:scale(.3)}}
+@keyframes fh{0%,70%{opacity:1}100%{opacity:0}}
 @media(max-width:600px){.hdr{padding:10px 14px}.hdr h1{font-size:16px}.leaflet-popup-content{width:260px}.pp-img{height:150px}.pp-body{padding:12px 14px}.pp-name{font-size:15px}.fab{bottom:20px;right:20px;width:50px;height:50px;font-size:24px}.sbtn{bottom:20px;right:84px;width:50px;height:50px;font-size:20px}.hint{bottom:82px;right:20px}.fr{flex-direction:column;gap:0}.side{width:300px}}
 </style>
 </head>
@@ -193,6 +204,7 @@ function mkMarker(t){
   m.bindPopup(popupHtml(t),{maxWidth:320,minWidth:260,closeButton:true});
   mmap[t.id]=m;
   mkRoute(t);
+  m.on("click",function(){setTimeout(function(){animateTransport(t);},400);});
 }
 
 function clearAll(){
@@ -218,9 +230,9 @@ function timeline(){
       var id=el.getAttribute("data-id");
       var t=trips.find(function(x){return x.id===id});
       if(!t)return;
-      map.setView([t.lat,t.lng],10);
-      if(mmap[id])mmap[id].openPopup();
+      map.setView([t.lat,t.lng],isOver(t.lat,t.lng)?3:10);
       document.getElementById("side").classList.remove("open");
+      setTimeout(function(){if(mmap[id])mmap[id].openPopup();animateTransport(t);},600);
     });
   });
 }
@@ -295,6 +307,48 @@ async function delTrip(id){
 }
 
 loadTrips();
+
+var animMarker=null;
+function animateTransport(t){
+  if(animMarker){map.removeLayer(animMarker);animMarker=null;}
+  var ti=TI[t.transport]||TI.train;
+  var icoClass=t.transport==="plane"?"plane-ico":t.transport==="train"||t.transport==="shinkansen"?"train-ico":t.transport==="walk"?"walk-ico":"";
+  var icon=L.divIcon({className:"anim-mk",html:'<div class="anim-ico '+icoClass+'" style="font-size:36px">'+ti.icon+'</div>',iconSize:[36,36],iconAnchor:[18,18]});
+
+  var isIntl=isOver(t.lat,t.lng);
+  var pts=[];
+  var steps=60;
+
+  if(isIntl){
+    var viaLng=t.lng;
+    for(var i=0;i<=steps;i++){
+      var f=i/steps;
+      var lat=HOME.lat+(t.lat-HOME.lat)*f;
+      var lng=HOME.lng+(viaLng-HOME.lng)*f;
+      if(f<0.5){lat=HOME.lat+(0-HOME.lat)*Math.pow(f*2,1.5);lng=HOME.lng+(viaLng-HOME.lng)*f*2;}
+      else{var ff=(f-0.5)*2;lat=t.lat*Math.pow(ff,0.5);lng=viaLng+(t.lng-viaLng)*ff;}
+      pts.push([lat,lng]);
+    }
+  }else{
+    for(var i2=0;i2<=steps;i2++){
+      var f2=i2/steps;
+      pts.push([HOME.lat+(t.lat-HOME.lat)*f2,HOME.lng+(t.lng-HOME.lng)*f2]);
+    }
+  }
+
+  animMarker=L.marker(pts[0],{icon:icon,zIndexOffset:9000}).addTo(map);
+
+  var idx=0;
+  var iv=setInterval(function(){
+    if(idx>=pts.length){
+      clearInterval(iv);
+      setTimeout(function(){if(animMarker){map.removeLayer(animMarker);animMarker=null;}},1200);
+      return;
+    }
+    animMarker.setLatLng(pts[idx]);
+    idx++;
+  },30);
+}
 setTimeout(function(){document.getElementById("ld").classList.add("off");},3000);
 </script>
 </body>
