@@ -318,6 +318,13 @@ var pinIcon = L.divIcon({
 var trips = [];
 var markerMap = {};
 
+var sampleTrips = [
+  { id: "sample-1", name: "東京タワー", lat: 35.6586, lng: 139.7454, address: "東京都港区芝公園4-2-8", comment: "東京のシンボル。夜景が特に綺麗だった。", date: "2024-08-15", time: "18:30", photo: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=600&h=400&fit=crop" },
+  { id: "sample-2", name: "チームラボプラネツ", lat: 35.3906, lng: 139.7946, address: "東京都江東区豊洲6-1-16", comment: "光とデジタルアートの没入型体験が非常に幻想的だった。", date: "2024-10-20", time: "14:00", photo: "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=600&h=400&fit=crop" },
+  { id: "sample-3", name: "セレンゲティ国立公園", lat: -2.333, lng: 34.833, address: "タンザニア", comment: "野生動物の大移動を間近で見られた。大自然の迫力に圧倒された。", date: "2023-07-10", time: "09:00", photo: "https://images.unsplash.com/photo-1516426122078-c23e76319801?w=600&h=400&fit=crop" },
+  { id: "sample-4", name: "ギザのピラミッド", lat: 29.9792, lng: 31.1342, address: "エジプト・ギザ", comment: "紀元前の建造物のスケールに驚いた。フンヌ王のピラミッドは壮大だった。", date: "2023-03-05", time: "11:00", photo: "https://images.unsplash.com/photo-1503177119275-0aa32b3a9368?w=600&h=400&fit=crop" }
+];
+
 function buildPopupHtml(trip) {
   var html = "";
   if (trip.photo) {
@@ -366,7 +373,7 @@ async function fetchTrips() {
     showToast("データの取得に失敗しました");
     return;
   }
-  trips = res.data || [];
+  trips = res.data && res.data.length > 0 ? res.data : sampleTrips;
   rebuildAllMarkers();
   updateStats();
 }
