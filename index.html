@@ -18,26 +18,18 @@
 
   #map { width: 100%; height: 100vh; z-index: 1; }
 
-  /* ============================
-     ヘッダー
-     ============================ */
   .header-bar {
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
+    top: 0; left: 0; right: 0;
     z-index: 1000;
     background: rgba(15, 15, 15, 0.88);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border-bottom: 1px solid rgba(255,255,255,0.08);
-  }
-
-  .header-top {
+    padding: 12px 20px;
     display: flex;
     align-items: center;
-    padding: 10px 20px 6px;
     gap: 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
   }
 
   .header-bar h1 {
@@ -58,94 +50,9 @@
     border-radius: 20px;
     font-size: 12px;
     color: #aaa;
-  }
-
-  /* ============================
-     認証フォーム（未ログイン）
-     ============================ */
-  .auth-form {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-left: auto;
-    flex-wrap: wrap;
-  }
-
-  .auth-form input {
-    padding: 6px 10px;
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 6px;
-    color: #e0e0e0;
-    font-size: 12px;
-    outline: none;
-    transition: border-color 0.2s;
-    width: 150px;
-  }
-  .auth-form input:focus {
-    border-color: #60a5fa;
-  }
-  .auth-form input::placeholder { color: #555; }
-
-  .auth-form .btn-sm {
-    padding: 6px 12px;
-    border: none;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.2s;
-    white-space: nowrap;
-  }
-
-  .btn-signup {
-    background: linear-gradient(135deg, #60a5fa, #a78bfa);
-    color: #fff;
-  }
-  .btn-signup:hover { opacity: 0.85; }
-
-  .btn-login {
-    background: rgba(255,255,255,0.08);
-    color: #ccc;
-    border: 1px solid rgba(255,255,255,0.12) !important;
-  }
-  .btn-login:hover { background: rgba(255,255,255,0.14); }
-
-  /* ============================
-     ログイン済み表示
-     ============================ */
-  .auth-info {
-    display: flex;
-    align-items: center;
-    gap: 8px;
     margin-left: auto;
   }
 
-  .user-email {
-    font-size: 12px;
-    color: #888;
-    max-width: 160px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .btn-logout {
-    padding: 6px 12px;
-    border: 1px solid rgba(239,68,68,0.3);
-    border-radius: 6px;
-    background: rgba(239,68,68,0.1);
-    color: #ef4444;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.2s;
-  }
-  .btn-logout:hover { background: rgba(239,68,68,0.2); }
-
-  /* ============================
-     Leaflet overrides
-     ============================ */
   .leaflet-popup-content-wrapper {
     background: #1a1a2e;
     color: #e0e0e0;
@@ -199,9 +106,6 @@
   .leaflet-control-attribution { background: rgba(15,15,15,0.7) !important; color: #555 !important; font-size: 10px !important; }
   .leaflet-control-attribution a { color: #777 !important; }
 
-  /* ============================
-     FAB
-     ============================ */
   .fab {
     position: fixed; bottom: 28px; right: 28px; z-index: 1000;
     width: 56px; height: 56px; border-radius: 50%; border: none;
@@ -209,14 +113,10 @@
     color: #fff; font-size: 28px; cursor: pointer;
     box-shadow: 0 4px 20px rgba(96,165,250,0.4);
     transition: transform 0.2s, box-shadow 0.2s;
-    display: none; align-items: center; justify-content: center;
+    display: flex; align-items: center; justify-content: center;
   }
-  .fab.visible { display: flex; }
   .fab:hover { transform: scale(1.1); box-shadow: 0 6px 28px rgba(96,165,250,0.6); }
 
-  /* ============================
-     モーダル
-     ============================ */
   .modal-overlay {
     display: none; position: fixed; inset: 0; z-index: 2000;
     background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
@@ -284,7 +184,7 @@
   @keyframes fadeHint { 0%, 70% { opacity: 1; } 100% { opacity: 0; } }
 
   .toast {
-    position: fixed; top: 80px; left: 50%;
+    position: fixed; top: 70px; left: 50%;
     transform: translateX(-50%) translateY(-20px); z-index: 3000;
     background: #22c55e; color: #fff; padding: 10px 20px;
     border-radius: 10px; font-size: 13px; font-weight: 600;
@@ -305,11 +205,9 @@
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  @media (max-width: 700px) {
-    .header-top { padding: 8px 14px 4px; flex-wrap: wrap; }
+  @media (max-width: 600px) {
+    .header-bar { padding: 10px 14px; }
     .header-bar h1 { font-size: 16px; }
-    .auth-form { width: 100%; margin-top: 4px; }
-    .auth-form input { flex: 1; min-width: 0; width: auto; }
     .leaflet-popup-content { width: 260px; }
     .popup-photo { height: 150px; }
     .popup-body { padding: 12px 14px; }
@@ -317,7 +215,6 @@
     .fab { bottom: 20px; right: 20px; width: 50px; height: 50px; font-size: 24px; }
     .map-click-hint { bottom: 82px; right: 20px; }
     .form-row { flex-direction: column; gap: 0; }
-    .user-email { max-width: 100px; }
   }
 </style>
 </head>
@@ -329,22 +226,8 @@
 </div>
 
 <div class="header-bar">
-  <div class="header-top">
-    <h1>Tripp Map</h1>
-    <span class="stat-badge" id="spotCount">📍 0 spots</span>
-    <!-- 未ログイン: 認証フォーム -->
-    <div class="auth-form" id="authForm">
-      <input type="email" id="authEmail" placeholder="メールアドレス">
-      <input type="password" id="authPassword" placeholder="パスワード">
-      <button class="btn-sm btn-signup" id="btnSignUp">新規登録</button>
-      <button class="btn-sm btn-login" id="btnLogin">ログイン</button>
-    </div>
-    <!-- ログイン済み: ユーザー情報 -->
-    <div class="auth-info" id="authInfo" style="display:none">
-      <span class="user-email" id="userEmail"></span>
-      <button class="btn-logout" id="btnLogout">ログアウト</button>
-    </div>
-  </div>
+  <h1>Tripp Map</h1>
+  <span class="stat-badge" id="spotCount">📍 0 spots</span>
 </div>
 
 <div id="map"></div>
@@ -353,7 +236,6 @@
 
 <div class="map-click-hint" id="mapHint">地図をクリックしてピンの位置を選択</div>
 
-<!-- 旅行先登録 / 編集モーダル -->
 <div class="modal-overlay" id="tripModalOverlay">
   <div class="modal">
     <div class="modal-header">
@@ -406,110 +288,12 @@
 <div class="toast" id="toast"></div>
 
 <script>
-// ============================
-// ★ Supabase 接続設定（ここに貼り付け）
-// ============================
 var SUPABASE_URL = "https://pmqbkzmoldnrxsgcilaq.supabase.co";
 var SUPABASE_KEY = "sb_publishable_-peFoHZjmmEYafHuNrTFqw_f4BUoTNp";
 var TABLE_NAME = "tripp";
 
 var sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// ============================
-// 認証状態
-// ============================
-var currentUser = null;
-
-var authFormEl = document.getElementById("authForm");
-var authInfoEl = document.getElementById("authInfo");
-var fabEl = document.getElementById("fabBtn");
-
-function updateAuthUI() {
-  if (currentUser) {
-    authFormEl.style.display = "none";
-    authInfoEl.style.display = "";
-    document.getElementById("userEmail").textContent = currentUser.email || "";
-    fabEl.classList.add("visible");
-  } else {
-    authFormEl.style.display = "";
-    authInfoEl.style.display = "none";
-    fabEl.classList.remove("visible");
-  }
-  rebuildAllMarkers();
-}
-
-// ============================
-// 新規登録
-// ============================
-document.getElementById("btnSignUp").addEventListener("click", async function() {
-  var email = document.getElementById("authEmail").value.trim();
-  var password = document.getElementById("authPassword").value;
-
-  if (!email || !password) {
-    alert("メールアドレスとパスワードを入力してください");
-    return;
-  }
-  if (password.length < 6) {
-    alert("パスワードは6文字以上で入力してください");
-    return;
-  }
-
-  var res = await sb.auth.signUp({ email: email, password: password });
-  if (res.error) {
-    showToast("登録に失敗しました: " + res.error.message);
-    return;
-  }
-
-  if (res.data.user && !res.data.session) {
-    showToast("確認メールを送信しました。メールからログインしてください。");
-  } else {
-    showToast("登録が完了しました！");
-  }
-  document.getElementById("authPassword").value = "";
-});
-
-// ============================
-// ログイン
-// ============================
-document.getElementById("btnLogin").addEventListener("click", async function() {
-  var email = document.getElementById("authEmail").value.trim();
-  var password = document.getElementById("authPassword").value;
-
-  if (!email || !password) {
-    alert("メールアドレスとパスワードを入力してください");
-    return;
-  }
-
-  var res = await sb.auth.signInWithPassword({ email: email, password: password });
-  if (res.error) {
-    showToast("ログインに失敗しました: " + res.error.message);
-    return;
-  }
-
-  showToast("ログインしました！");
-  document.getElementById("authEmail").value = "";
-  document.getElementById("authPassword").value = "";
-});
-
-// ============================
-// ログアウト
-// ============================
-document.getElementById("btnLogout").addEventListener("click", async function() {
-  await sb.auth.signOut();
-  showToast("ログアウトしました");
-});
-
-// ============================
-// セッション監視
-// ============================
-sb.auth.onAuthStateChange(function(event, session) {
-  currentUser = session ? session.user : null;
-  updateAuthUI();
-});
-
-// ============================
-// マップ初期化
-// ============================
 var map = L.map("map", {
   center: [36.5, 138.0],
   zoom: 5,
@@ -523,9 +307,6 @@ L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
   maxZoom: 19
 }).addTo(map);
 
-// ============================
-// カスタムピンアイコン
-// ============================
 var pinIcon = L.divIcon({
   className: "custom-pin",
   html: '<svg width="28" height="40" viewBox="0 0 28 40" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#60a5fa"/><stop offset="100%" stop-color="#a78bfa"/></linearGradient></defs><path d="M14 0C6.27 0 0 6.27 0 14c0 10.5 14 26 14 26s14-15.5 14-26C28 6.27 21.73 0 14 0z" fill="url(#g)" stroke="#fff" stroke-width="1.5"/><circle cx="14" cy="13" r="6" fill="#fff" opacity="0.9"/></svg>',
@@ -534,9 +315,6 @@ var pinIcon = L.divIcon({
   popupAnchor: [0, -38]
 });
 
-// ============================
-// マーカー管理
-// ============================
 var trips = [];
 var markerMap = {};
 
@@ -553,12 +331,10 @@ function buildPopupHtml(trip) {
   html += '<span>📅 ' + (trip.date || "-") + '</span>';
   html += '<span>🕐 ' + (trip.time || "-") + '</span>';
   html += '</div>';
-  if (currentUser && trip.user_id === currentUser.id) {
-    html += '<div class="popup-actions">';
-    html += '<button class="btn-edit" data-action="edit" data-id="' + trip.id + '">✏️ 編集</button>';
-    html += '<button class="btn-delete" data-action="delete" data-id="' + trip.id + '">🗑 削除</button>';
-    html += '</div>';
-  }
+  html += '<div class="popup-actions">';
+  html += '<button class="btn-edit" data-action="edit" data-id="' + trip.id + '">✏️ 編集</button>';
+  html += '<button class="btn-delete" data-action="delete" data-id="' + trip.id + '">🗑 削除</button>';
+  html += '</div>';
   html += '</div>';
   return html;
 }
@@ -579,16 +355,10 @@ function rebuildAllMarkers() {
   });
 }
 
-// ============================
-// 統計表示
-// ============================
 function updateStats() {
   document.getElementById("spotCount").textContent = "📍 " + trips.length + " spots";
 }
 
-// ============================
-// Supabase CRUD
-// ============================
 async function fetchTrips() {
   var res = await sb.from(TABLE_NAME).select("*").order("created_at", { ascending: false });
   if (res.error) {
@@ -631,12 +401,10 @@ async function deleteTripFromDB(id) {
   return true;
 }
 
-// ============================
-// フォーム制御
-// ============================
 var tripOverlay = document.getElementById("tripModalOverlay");
 var tripModalClose = document.getElementById("tripModalClose");
 var registerBtn = document.getElementById("registerBtn");
+var fabBtn = document.getElementById("fabBtn");
 var mapHint = document.getElementById("mapHint");
 var toast = document.getElementById("toast");
 var modalTitle = document.getElementById("modalTitle");
@@ -675,16 +443,7 @@ function showToast(msg) {
   }, 2000);
 }
 
-function requireAuth() {
-  if (!currentUser) {
-    showToast("この機能を使うにはログインが必要です");
-    return false;
-  }
-  return true;
-}
-
-fabEl.addEventListener("click", function() {
-  if (!requireAuth()) return;
+fabBtn.addEventListener("click", function() {
   editId = null;
   clearForm();
   openTripModal("旅行先を登録");
@@ -699,23 +458,15 @@ tripOverlay.addEventListener("click", function(e) {
   if (e.target === tripOverlay) closeTripModal();
 });
 
-// ============================
-// 地地図クリックで緯度・経度を自動入力
-// ============================
 map.on("click", function(e) {
-  if (!currentUser) return;
   fLat.value = e.latlng.lat.toFixed(4);
   fLng.value = e.latlng.lng.toFixed(4);
   mapHint.style.display = "none";
 });
 
-// ============================
-// ポップアップ内のボタン（イベントデリゲーション）
-// ============================
 document.addEventListener("click", async function(e) {
   var btn = e.target.closest("[data-action]");
   if (!btn) return;
-  if (!requireAuth()) return;
 
   var action = btn.getAttribute("data-action");
   var id = btn.getAttribute("data-id");
@@ -727,9 +478,6 @@ document.addEventListener("click", async function(e) {
   }
 });
 
-// ============================
-// 登録 / 更新ボタン
-// ============================
 registerBtn.addEventListener("click", async function() {
   var name = document.getElementById("fName").value.trim();
   var address = document.getElementById("fAddress").value.trim();
@@ -745,8 +493,7 @@ registerBtn.addEventListener("click", async function() {
 
   var tripData = {
     name: name, lat: lat, lng: lng, address: address,
-    comment: comment, photo: photo, date: date, time: time,
-    user_id: currentUser.id
+    comment: comment, photo: photo, date: date, time: time
   };
 
   if (editId) {
@@ -772,9 +519,6 @@ registerBtn.addEventListener("click", async function() {
   map.setView([lat, lng], 10);
 });
 
-// ============================
-// 編集
-// ============================
 function startEdit(id) {
   var t = trips.find(function(trip) { return trip.id === id; });
   if (!t) return;
@@ -792,9 +536,6 @@ function startEdit(id) {
   map.closePopup();
 }
 
-// ============================
-// 削除
-// ============================
 async function handleDelete(id) {
   var t = trips.find(function(trip) { return trip.id === id; });
   if (!t) return;
@@ -810,11 +551,7 @@ async function handleDelete(id) {
   showToast("ピンを削除しました");
 }
 
-// ============================
-// 初期化
-// ============================
 (async function init() {
-  await sb.auth.getSession();
   await fetchTrips();
   document.getElementById("loadingOverlay").classList.add("hidden");
 })();
